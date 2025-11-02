@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-
+// comments are not AI generated slope, were written to undertand the flow code and concepts used in this
 int main()
 {
     // step 1
