@@ -4,6 +4,63 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h> //for multi threading in order to broadcast messages to all clients
+
+#define max_clients 10
+#define buffer_size 1024
+
+// isme we hold the connected clients socket and an id
+typedef struct {
+    struct sock_addr_in addr; //might not be used , this is only for logging, comes from <netinet.h> ,stores address (IP, port)
+    int uid;
+    int sock_fd; //when server accepts connection, accept() returns a int called socket file descriptor. number (sockfd) represents a unique communication endpoint between the server and that particular client. It’s how the operating system identifies which client you’re talking to.
+} client_sol;  // typedefined struct - can be called just using clie\nt_sol
+ 
+client_sol *clients[max_clients]; //arr of ptrs to connected clientsu 
+pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER; // protects clients[]
+// client mutexx is a variable that can be used to get lock on array
+
+//helper functions to add client in array , remove from arr upon disconnecting 
+
+//add client to array
+void add_client(client_sol *cl){
+    pthread_mutex_lock(&clients_mutex); //attain mutex before modification(locked)
+    for(int i = 0; i < max_clients; i++){
+        if(!clients[i]){ 
+            clients[i] = cl;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+}
+
+//remove client usinf uid
+void remove_client(int uid){
+    pthread_mutex_lock(&clients_mutex);
+    for(int i =0; i<max_clients; i++){
+        if(clients[i]){
+            if(clients[i]->uid == uid){
+                clients[i] == NULL;
+                break;
+            }
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+}
+
+void send_message(char *message,int sender_uid){
+    pthread_mutex_lock(&clients_mutex);
+    for (int i = 0; i < max_clients; i++){
+        if(clients[i]){
+            if(clients[i]->uid != sender_uid){
+                //write is a posix syscall, writes from message to file descriptor upto length given by strlen
+                write(clients[i]->sock_fd, message, strlen(message));
+            }
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+    
+}
 
 int main()
 {
