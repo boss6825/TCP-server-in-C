@@ -62,6 +62,7 @@ void send_message(char *message,int sender_uid){
     
 }
 
+// comments are not AI generated slope, were written to undertand the flow code and concepts used in this
 int main()
 {
     // step 1
